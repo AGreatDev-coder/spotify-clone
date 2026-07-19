@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Play,
   Pause,
@@ -7,6 +7,7 @@ import {
   SkipForward,
   Repeat,
   Heart,
+  Volume1,
   Volume2,
   VolumeX,
   ListMusic,
@@ -14,10 +15,89 @@ import {
   Maximize2,
 } from 'lucide-react';
 
+// Helper function: Converts seconds into MM:SS format
+function formatDuration(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  const paddedSeconds = remainingSeconds < 10 ? `0${remainingSeconds}` : remainingSeconds;
+  return `${minutes}:${paddedSeconds}`;
+}
+
 function Player() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  
+  // Scrubber / Progress states
+  const [currentTime, setCurrentTime] = useState(105); // Start at 1:45
+  const duration = 225; // 3:45 total duration
+  
+  // Volume states
+  const [volume, setVolume] = useState(70); // Starts at 70%
+  const [previousVolume, setPreviousVolume] = useState(70);
+
+  // Dynamic ticking timeline simulation when playing
+  useEffect(() => {
+    let interval = null;
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setCurrentTime((time) => {
+          if (time >= duration) {
+            setIsPlaying(false); // Stop playing when track finishes
+            return 0;
+          }
+          return time + 1;
+        });
+      }, 1000);
+    } else {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying]);
+
+  // Click handler to seek through progress bar
+  const handleProgressBarClick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    const newTime = Math.max(0, Math.min(duration, Math.floor(percentage * duration)));
+    setCurrentTime(newTime);
+  };
+
+  // Click handler to seek through volume bar
+  const handleVolumeBarClick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    const newVolume = Math.max(0, Math.min(100, Math.floor(percentage * 100)));
+    setVolume(newVolume);
+    if (newVolume > 0) {
+      setIsMuted(false);
+    }
+  };
+
+  // Mute toggle handler
+  const handleMuteToggle = () => {
+    if (isMuted) {
+      setVolume(previousVolume);
+      setIsMuted(false);
+    } else {
+      setPreviousVolume(volume);
+      setVolume(0);
+      setIsMuted(true);
+    }
+  };
+
+  // Render Volume Icon based on current level
+  const renderVolumeIcon = () => {
+    if (isMuted || volume === 0) {
+      return <VolumeX className="w-5 h-5" />;
+    }
+    if (volume < 50) {
+      return <Volume1 className="w-5 h-5" />;
+    }
+    return <Volume2 className="w-5 h-5" />;
+  };
 
   return (
     <footer className="h-20 w-full bg-black border-t border-spotify-light/20 px-4 flex items-center justify-between select-none shrink-0 z-50">
@@ -96,16 +176,27 @@ function Player() {
           </button>
         </div>
 
-        {/* Progress Bar (Visual Mockup) */}
+        {/* Progress Bar (Interactive seek bar) */}
         <div className="w-full flex items-center gap-2 text-[10px] text-spotify-gray font-semibold">
-          <span>1:45</span>
-          <div className="flex-1 h-1 bg-spotify-hover rounded-full relative group cursor-pointer">
+          <span className="w-7 text-right">{formatDuration(currentTime)}</span>
+          <button
+            type="button"
+            onClick={handleProgressBarClick}
+            className="flex-1 h-1 bg-spotify-hover rounded-full relative group cursor-pointer text-left"
+            aria-label="Seek timeline"
+          >
             {/* Green progress fill */}
-            <div className="w-[45%] h-full bg-white group-hover:bg-spotify-green rounded-full transition-colors duration-150" />
+            <div
+              style={{ width: `${(currentTime / duration) * 100}%` }}
+              className="h-full bg-white group-hover:bg-spotify-green rounded-full transition-all duration-100"
+            />
             {/* Hover Handle knob */}
-            <div className="w-3.5 h-3.5 bg-white rounded-full absolute top-1/2 left-[45%] -translate-x-1/2 -translate-y-1/2 shadow-md hidden group-hover:block" />
-          </div>
-          <span>3:45</span>
+            <div
+              style={{ left: `${(currentTime / duration) * 100}%` }}
+              className="w-3 h-3 bg-white rounded-full absolute top-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md hidden group-hover:block"
+            />
+          </button>
+          <span className="w-7 text-left">{formatDuration(duration)}</span>
         </div>
       </div>
 
@@ -127,28 +218,35 @@ function Player() {
         </button>
         
         {/* Volume controls */}
-        <div className="flex items-center gap-2 group w-32">
+        <div className="flex items-center gap-2 w-32">
           <button
             type="button"
-            onClick={() => setIsMuted(!isMuted)}
+            onClick={handleMuteToggle}
             className="hover:text-white hover:scale-105 active:scale-95 transition cursor-pointer shrink-0"
             aria-label={isMuted ? 'Unmute' : 'Mute'}
           >
-            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+            {renderVolumeIcon()}
           </button>
           
-          <div className="flex-1 h-1 bg-spotify-hover rounded-full relative group cursor-pointer">
+          <button
+            type="button"
+            onClick={handleVolumeBarClick}
+            className="flex-1 h-1 bg-spotify-hover rounded-full relative group cursor-pointer text-left"
+            aria-label="Adjust volume"
+          >
             {/* Volume progress fill */}
             <div
-              className={`h-full rounded-full transition-colors duration-150 ${
-                isMuted ? 'w-0' : 'w-[70%] bg-white group-hover:bg-spotify-green'
-              }`}
+              style={{ width: `${volume}%` }}
+              className="h-full bg-white group-hover:bg-spotify-green rounded-full transition-all duration-100"
             />
             {/* Volume Handle knob */}
-            {!isMuted && (
-              <div className="w-3 h-3 bg-white rounded-full absolute top-1/2 left-[70%] -translate-x-1/2 -translate-y-1/2 shadow-md hidden group-hover:block" />
+            {volume > 0 && (
+              <div
+                style={{ left: `${volume}%` }}
+                className="w-3 h-3 bg-white rounded-full absolute top-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md hidden group-hover:block"
+              />
             )}
-          </div>
+          </button>
         </div>
 
         <button
