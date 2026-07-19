@@ -3,11 +3,10 @@ import { Home, Search, Library, Plus, ArrowRight, X } from 'lucide-react';
 import { mockLibrary } from '../data/mockData';
 import LibraryItem from './LibraryItem';
 
-function Sidebar({ activeTab, setActiveTab }) {
+function Sidebar({ currentView, onViewChange }) {
   const [activeFilter, setActiveFilter] = useState('all');
 
   const handleFilterClick = (filter) => {
-    // If the clicked filter is already active, reset it to 'all'
     setActiveFilter(activeFilter === filter ? 'all' : filter);
   };
 
@@ -17,15 +16,15 @@ function Sidebar({ activeTab, setActiveTab }) {
   });
 
   return (
-    <aside className="w-[300px] h-full flex flex-col gap-2 shrink-0">
+    <aside className="hidden md:flex w-[300px] h-full flex-col gap-2 shrink-0">
       {/* Upper Panel: Main Navigation */}
       <div className="bg-spotify-black rounded-lg p-5 flex flex-col gap-4">
         {/* Home Button */}
         <button
           type="button"
-          onClick={() => setActiveTab('home')}
+          onClick={() => onViewChange({ type: 'home' })}
           className={`flex items-center gap-4 w-full cursor-pointer transition-colors duration-200 text-left ${
-            activeTab === 'home' ? 'text-white' : 'text-spotify-gray hover:text-white'
+            currentView.type === 'home' ? 'text-white' : 'text-spotify-gray hover:text-white'
           }`}
         >
           <Home className="w-6 h-6" />
@@ -35,9 +34,9 @@ function Sidebar({ activeTab, setActiveTab }) {
         {/* Search Button */}
         <button
           type="button"
-          onClick={() => setActiveTab('search')}
+          onClick={() => onViewChange({ type: 'search' })}
           className={`flex items-center gap-4 w-full cursor-pointer transition-colors duration-200 text-left ${
-            activeTab === 'search' ? 'text-white' : 'text-spotify-gray hover:text-white'
+            currentView.type === 'search' ? 'text-white' : 'text-spotify-gray hover:text-white'
           }`}
         >
           <Search className="w-6 h-6" />
@@ -158,7 +157,21 @@ function Sidebar({ activeTab, setActiveTab }) {
           {/* Dynamic Library Shelf List */}
           <div className="flex flex-col gap-1 mt-2 pt-2 border-t border-spotify-light/20">
             {filteredLibrary.map((item) => (
-              <LibraryItem key={item.id} item={item} />
+              <LibraryItem
+                key={item.id}
+                item={item}
+                onClick={() => {
+                  if (item.id === 'lib-1') {
+                    onViewChange({ type: 'liked' });
+                  } else if (item.type === 'Artist') {
+                    const artistId = item.id === 'lib-4' ? 'art-1' : null;
+                    if (artistId) onViewChange({ type: 'artist', id: artistId });
+                  } else if (item.type === 'Album') {
+                    const albumId = item.id === 'lib-3' ? 'alb-2' : null;
+                    if (albumId) onViewChange({ type: 'album', id: albumId });
+                  }
+                }}
+              />
             ))}
           </div>
         </div>

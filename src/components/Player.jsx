@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Play,
   Pause,
@@ -23,40 +23,28 @@ function formatDuration(seconds) {
   return `${minutes}:${paddedSeconds}`;
 }
 
-function Player() {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+function Player({
+  currentTrack,
+  isPlaying,
+  onPlayToggle,
+  onNextTrack,
+  onPreviousTrack,
+  likedSongIds,
+  onLikeToggle,
+  currentTime,
+  setCurrentTime,
+  volume,
+  setVolume,
+}) {
   const [isMuted, setIsMuted] = useState(false);
-  
-  // Scrubber / Progress states
-  const [currentTime, setCurrentTime] = useState(105); // Start at 1:45
-  const duration = 225; // 3:45 total duration
-  
-  // Volume states
-  const [volume, setVolume] = useState(70); // Starts at 70%
   const [previousVolume, setPreviousVolume] = useState(70);
 
-  // Dynamic ticking timeline simulation when playing
-  useEffect(() => {
-    let interval = null;
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setCurrentTime((time) => {
-          if (time >= duration) {
-            setIsPlaying(false); // Stop playing when track finishes
-            return 0;
-          }
-          return time + 1;
-        });
-      }, 1000);
-    } else {
-      clearInterval(interval);
-    }
-    return () => clearInterval(interval);
-  }, [isPlaying]);
+  const duration = currentTrack ? currentTrack.duration : 0;
+  const isLiked = currentTrack ? likedSongIds.includes(currentTrack.id) : false;
 
   // Click handler to seek through progress bar
   const handleProgressBarClick = (e) => {
+    if (!currentTrack) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const percentage = clickX / rect.width;
@@ -99,26 +87,35 @@ function Player() {
     return <Volume2 className="w-5 h-5" />;
   };
 
+  // Fallback / Placeholder when no track is playing
+  if (!currentTrack) {
+    return (
+      <footer className="h-20 w-full bg-black border-t border-spotify-light/20 px-4 flex items-center justify-center text-spotify-gray select-none shrink-0 z-50">
+        <span className="text-sm font-semibold">Select a song to start playing</span>
+      </footer>
+    );
+  }
+
   return (
     <footer className="h-20 w-full bg-black border-t border-spotify-light/20 px-4 flex items-center justify-between select-none shrink-0 z-50">
       {/* 1. Left Section: Track Info */}
       <div className="flex items-center gap-3 w-1/3 min-w-0">
         <img
-          src="https://picsum.photos/id/103/100/100"
-          alt="Current Track Cover"
+          src={currentTrack.imageUrl}
+          alt={currentTrack.title}
           className="w-14 h-14 object-cover rounded shadow-md shrink-0"
         />
         <div className="flex flex-col min-w-0">
           <span className="text-sm font-semibold text-white truncate hover:underline cursor-pointer">
-            Get Lucky
+            {currentTrack.title}
           </span>
           <span className="text-xs text-spotify-gray truncate hover:text-white hover:underline cursor-pointer">
-            Daft Punk
+            {currentTrack.artist}
           </span>
         </div>
         <button
           type="button"
-          onClick={() => setIsLiked(!isLiked)}
+          onClick={() => onLikeToggle(currentTrack.id)}
           className="cursor-pointer p-1 transition ml-2"
           aria-label={isLiked ? 'Remove from Liked Songs' : 'Save to Liked Songs'}
         >
@@ -143,6 +140,7 @@ function Player() {
           </button>
           <button
             type="button"
+            onClick={onPreviousTrack}
             className="hover:text-white hover:scale-105 active:scale-95 transition cursor-pointer"
             aria-label="Previous track"
           >
@@ -150,7 +148,7 @@ function Player() {
           </button>
           <button
             type="button"
-            onClick={() => setIsPlaying(!isPlaying)}
+            onClick={onPlayToggle}
             className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition cursor-pointer shadow-md"
             aria-label={isPlaying ? 'Pause' : 'Play'}
           >
@@ -162,6 +160,7 @@ function Player() {
           </button>
           <button
             type="button"
+            onClick={onNextTrack}
             className="hover:text-white hover:scale-105 active:scale-95 transition cursor-pointer"
             aria-label="Next track"
           >

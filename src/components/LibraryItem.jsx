@@ -1,10 +1,13 @@
 import React from 'react';
 
-function LibraryItem({ item }) {
+function LibraryItem({ item, onClick }) {
   const isArtist = item.type === 'Artist';
 
   return (
-    <div className="flex items-center gap-3 p-2 rounded-md hover:bg-spotify-hover/40 active:bg-spotify-hover/70 transition-all duration-200 cursor-pointer">
+    <div
+      onClick={onClick}
+      className="flex items-center gap-3 p-2 rounded-md hover:bg-spotify-hover/40 active:bg-spotify-hover/70 transition-all duration-200 cursor-pointer"
+    >
       {/* Thumbnail Image */}
       <img
         src={item.imageUrl}

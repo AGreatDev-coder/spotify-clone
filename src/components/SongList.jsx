@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Play, Clock, Heart } from 'lucide-react';
+import React from 'react';
+import { Play, Pause, Clock, Heart } from 'lucide-react';
 
 // Helper function: Converts seconds into MM:SS format
 function formatDuration(seconds) {
@@ -9,23 +9,47 @@ function formatDuration(seconds) {
   return `${minutes}:${paddedSeconds}`;
 }
 
-// 1. Child Row Component: Manages its own local 'isLiked' state
-function SongRow({ song, index }) {
-  const [isLiked, setIsLiked] = useState(false);
-
+// Stateful track row component synced with global states
+function SongRow({
+  song,
+  index,
+  isActive,
+  isCurrentPlaying,
+  isLiked,
+  onPlayClick,
+  onLikeToggle,
+  onViewChange,
+}) {
   return (
     <div className="grid grid-cols-[24px_4fr_3fr_120px] gap-4 items-center px-4 py-2 hover:bg-white/10 rounded-md group text-sm text-spotify-gray transition duration-200 cursor-pointer">
-      {/* Play Button / Track Index */}
+      {/* Play/Pause Button / Track Index */}
       <div className="w-6 h-6 flex items-center justify-center relative shrink-0">
-        <span className="block group-hover:hidden text-xs text-spotify-gray font-semibold">
-          {index + 1}
+        <span
+          className={`block group-hover:hidden text-xs font-semibold ${
+            isActive ? 'text-spotify-green' : 'text-spotify-gray'
+          }`}
+        >
+          {isCurrentPlaying ? (
+            // Tiny equalizer style animation placeholder or simple text check
+            <span className="text-spotify-green animate-pulse">▶</span>
+          ) : (
+            index + 1
+          )}
         </span>
         <button
           type="button"
-          aria-label={`Play ${song.title}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onPlayClick();
+          }}
           className="hidden group-hover:block text-white cursor-pointer"
+          aria-label={isCurrentPlaying ? 'Pause' : 'Play'}
         >
-          <Play className="w-3.5 h-3.5 fill-white text-white" />
+          {isCurrentPlaying ? (
+            <Pause className="w-3.5 h-3.5 fill-white text-white" />
+          ) : (
+            <Play className="w-3.5 h-3.5 fill-white text-white" />
+          )}
         </button>
       </div>
 
@@ -37,28 +61,43 @@ function SongRow({ song, index }) {
           className="w-10 h-10 rounded object-cover shrink-0 shadow-md"
         />
         <div className="flex flex-col min-w-0">
-          <span className="font-semibold text-white truncate text-sm">
+          <span
+            className={`font-semibold truncate text-sm hover:underline cursor-pointer ${
+              isActive ? 'text-spotify-green' : 'text-white'
+            }`}
+          >
             {song.title}
           </span>
-          <span className="text-xs text-spotify-gray group-hover:text-white/70 truncate">
+          <span
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onViewChange) onViewChange({ type: 'artist', id: song.artistId });
+            }}
+            className="text-xs text-spotify-gray hover:text-white hover:underline truncate cursor-pointer"
+          >
             {song.artist}
           </span>
         </div>
       </div>
 
-      {/* Album Name */}
-      <span className="hidden md:block truncate text-spotify-gray group-hover:text-white transition duration-200">
+      {/* Album Name Link */}
+      <span
+        onClick={(e) => {
+          e.stopPropagation();
+          if (onViewChange) onViewChange({ type: 'album', id: song.albumId });
+        }}
+        className="hidden md:block truncate text-spotify-gray hover:text-white hover:underline transition duration-200 cursor-pointer"
+      >
         {song.album}
       </span>
 
       {/* Heart Action & Song Duration */}
       <div className="flex items-center justify-end gap-4 pr-4">
-        {/* Heart button: stays visible if liked, otherwise fades in on row hover */}
         <button
           type="button"
           onClick={(e) => {
-            e.stopPropagation(); // Prevents click event from triggering playing state on the row
-            setIsLiked(!isLiked);
+            e.stopPropagation();
+            onLikeToggle(song.id);
           }}
           className={`cursor-pointer transition-all duration-200 ${
             isLiked ? 'opacity-100' : 'opacity-40 hover:opacity-100'
@@ -81,8 +120,16 @@ function SongRow({ song, index }) {
   );
 }
 
-// 2. Main List Component
-function SongList({ songs }) {
+// Refactored SongList
+function SongList({
+  songs,
+  currentTrackId,
+  isPlaying,
+  onPlaySong,
+  likedSongIds,
+  onLikeToggle,
+  onViewChange,
+}) {
   return (
     <div className="w-full flex flex-col select-none">
       {/* Table Headers */}
@@ -97,9 +144,25 @@ function SongList({ songs }) {
 
       {/* Song Rows */}
       <div className="flex flex-col gap-0.5 mt-2">
-        {songs.map((song, index) => (
-          <SongRow key={song.id} song={song} index={index} />
-        ))}
+        {songs.map((song, index) => {
+          const isActive = song.id === currentTrackId;
+          const isCurrentPlaying = isActive && isPlaying;
+          const isLiked = likedSongIds.includes(song.id);
+
+          return (
+            <SongRow
+              key={song.id}
+              song={song}
+              index={index}
+              isActive={isActive}
+              isCurrentPlaying={isCurrentPlaying}
+              isLiked={isLiked}
+              onPlayClick={() => onPlaySong(song)}
+              onLikeToggle={onLikeToggle}
+              onViewChange={onViewChange}
+            />
+          );
+        })}
       </div>
     </div>
   );
