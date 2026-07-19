@@ -61,7 +61,7 @@ function SongRow({ song, index }) {
             setIsLiked(!isLiked);
           }}
           className={`cursor-pointer transition-all duration-200 ${
-            isLiked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            isLiked ? 'opacity-100' : 'opacity-40 hover:opacity-100'
           }`}
           aria-label={isLiked ? 'Remove from Liked Songs' : 'Save to Liked Songs'}
         >
