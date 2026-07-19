@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
-import { mockPlaylists, mockAlbums } from './data/mockData';
+import { mockPlaylists, mockAlbums, mockSongs } from './data/mockData';
 import MediaCard from './components/MediaCard';
+import SongList from './components/SongList';
 
 function App() {
   const [activeTab, setActiveTab] = useState('home');
@@ -58,6 +59,12 @@ function App() {
                       />
                     ))}
                   </div>
+                </div>
+
+                {/* Song List Section */}
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold mb-4 text-white">Trending tracks</h2>
+                  <SongList songs={mockSongs} />
                 </div>
               </div>
             ) : (

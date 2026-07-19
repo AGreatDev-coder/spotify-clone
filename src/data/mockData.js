@@ -119,3 +119,46 @@ export const mockAlbums = [
     imageUrl: 'https://picsum.photos/id/109/300/300',
   },
 ];
+
+export const mockSongs = [
+  {
+    id: 'song-1',
+    title: 'Get Lucky',
+    artist: 'Daft Punk',
+    album: 'Random Access Memories',
+    duration: 369,
+    imageUrl: 'https://picsum.photos/id/103/100/100',
+  },
+  {
+    id: 'song-2',
+    title: 'Blinding Lights',
+    artist: 'The Weeknd',
+    album: 'After Hours',
+    duration: 200,
+    imageUrl: 'https://picsum.photos/id/104/100/100',
+  },
+  {
+    id: 'song-3',
+    title: 'Radioactive',
+    artist: 'Imagine Dragons',
+    album: 'Night Visions',
+    duration: 186,
+    imageUrl: 'https://picsum.photos/id/106/100/100',
+  },
+  {
+    id: 'song-4',
+    title: 'Do I Wanna Know?',
+    artist: 'Arctic Monkeys',
+    album: 'AM',
+    duration: 272,
+    imageUrl: 'https://picsum.photos/id/107/100/100',
+  },
+  {
+    id: 'song-5',
+    title: 'Billie Jean',
+    artist: 'Michael Jackson',
+    album: 'Thriller',
+    duration: 294,
+    imageUrl: 'https://picsum.photos/id/108/100/100',
+  },
+];
