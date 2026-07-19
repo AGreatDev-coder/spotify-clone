@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import { mockPlaylists, mockAlbums, mockSongs } from './data/mockData';
 import MediaCard from './components/MediaCard';
 import SongList from './components/SongList';
+import Player from './components/Player';
 
 function App() {
   const [activeTab, setActiveTab] = useState('home');
@@ -78,9 +79,7 @@ function App() {
       </div>
 
       {/* Playback Bar (Footer) */}
-      <footer className="h-20 bg-black flex items-center px-4 border-t border-spotify-light/20">
-        <p className="text-spotify-gray">Player Placeholder</p>
-      </footer>
+      <Player />
     </div>
   );
 }
