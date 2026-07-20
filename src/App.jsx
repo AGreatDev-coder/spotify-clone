@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import Player from './components/Player';
@@ -25,30 +25,62 @@ function App() {
   const [volume, setVolume] = useState(70);
   const [likedSongIds, setLikedSongIds] = useState(['song-1', 'song-3']); // Pre-liked items
 
-  // Ticking timeline play simulation
+  // HTML5 Audio Reference
+  const audioRef = useRef(null);
+
+  // Play / Pause HTML5 Audio Syncing
   useEffect(() => {
-    let interval = null;
-    if (isPlaying && currentTrack) {
-      interval = setInterval(() => {
-        setCurrentTime((time) => {
-          if (time >= currentTrack.duration) {
-            handleNextTrack(); // Auto-play next track on finish
-            return 0;
-          }
-          return time + 1;
+    if (!audioRef.current) return;
+
+    if (isPlaying) {
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.warn('Audio playback prevented or interrupted:', error);
+          setIsPlaying(false);
         });
-      }, 1000);
+      }
     } else {
-      clearInterval(interval);
+      audioRef.current.pause();
     }
-    return () => clearInterval(interval);
   }, [isPlaying, currentTrack]);
+
+  // Volume Syncing
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume / 100;
+    }
+  }, [volume]);
+
+  // Handle native audio time update event
+  const handleAudioTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(Math.floor(audioRef.current.currentTime));
+    }
+  };
+
+  // Handle track ending
+  const handleAudioEnded = () => {
+    handleNextTrack();
+  };
+
+  // Custom Seek Handler (passed to Player component)
+  const handleSeekTime = (newTime) => {
+    setCurrentTime(newTime);
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime;
+    }
+  };
 
   // Playback Control Handlers
   const handlePlaySong = (song) => {
-    setCurrentTrack(song);
-    setIsPlaying(true);
-    setCurrentTime(0);
+    if (currentTrack?.id === song.id) {
+      setIsPlaying(!isPlaying);
+    } else {
+      setCurrentTrack(song);
+      setCurrentTime(0);
+      setIsPlaying(true);
+    }
   };
 
   const handlePlayToggle = () => {
@@ -81,14 +113,6 @@ function App() {
       song.artist.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredPlaylists = mockPlaylists.filter((playlist) =>
-    playlist.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const filteredAlbums = mockAlbums.filter((album) =>
-    album.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   // Render View helper
   const renderCurrentView = () => {
     switch (view.type) {
@@ -98,7 +122,7 @@ function App() {
             {/* Greeting */}
             <div>
               <h1 className="text-3xl font-bold mb-1">Welcome to Spotify</h1>
-              <p className="text-spotify-gray text-sm">We are building this step by step!</p>
+              <p className="text-spotify-gray text-sm">Real audio playback is active! Click play on any song.</p>
             </div>
 
             {/* Playlists section */}
@@ -354,6 +378,14 @@ function App() {
 
   return (
     <div className="h-screen w-screen bg-black text-white flex flex-col overflow-hidden relative pb-14 md:pb-0">
+      {/* Hidden HTML5 Audio Element */}
+      <audio
+        ref={audioRef}
+        src={currentTrack?.audioUrl}
+        onTimeUpdate={handleAudioTimeUpdate}
+        onEnded={handleAudioEnded}
+      />
+
       {/* Upper section: Sidebar + Main Content */}
       <div className="flex-1 flex overflow-hidden p-2 gap-2">
         {/* Persistent Desktop Sidebar */}
@@ -363,7 +395,7 @@ function App() {
         <main className="flex-1 flex flex-col bg-spotify-black rounded-lg overflow-hidden relative">
           {/* Top Navbar */}
           <Navbar />
-          
+
           {/* Dynamic Scrollable Page Content Router */}
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
             {renderCurrentView()}
@@ -381,7 +413,7 @@ function App() {
         likedSongIds={likedSongIds}
         onLikeToggle={handleLikeToggle}
         currentTime={currentTime}
-        setCurrentTime={setCurrentTime}
+        setCurrentTime={handleSeekTime}
         volume={volume}
         setVolume={setVolume}
       />

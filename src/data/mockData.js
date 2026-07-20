@@ -148,6 +148,7 @@ export const mockSongs = [
     albumId: 'alb-1',
     duration: 369,
     imageUrl: 'https://picsum.photos/id/103/100/100',
+    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
   },
   {
     id: 'song-2',
@@ -158,6 +159,7 @@ export const mockSongs = [
     albumId: 'alb-2',
     duration: 200,
     imageUrl: 'https://picsum.photos/id/104/100/100',
+    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
   },
   {
     id: 'song-3',
@@ -168,6 +170,7 @@ export const mockSongs = [
     albumId: 'alb-3',
     duration: 186,
     imageUrl: 'https://picsum.photos/id/106/100/100',
+    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
   },
   {
     id: 'song-4',
@@ -178,6 +181,7 @@ export const mockSongs = [
     albumId: 'alb-4',
     duration: 272,
     imageUrl: 'https://picsum.photos/id/107/100/100',
+    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
   },
   {
     id: 'song-5',
@@ -188,6 +192,7 @@ export const mockSongs = [
     albumId: 'alb-5',
     duration: 294,
     imageUrl: 'https://picsum.photos/id/108/100/100',
+    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
   },
 ];
 
